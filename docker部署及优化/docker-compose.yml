@@ -1,0 +1,444 @@
+version: '2' # 表示该 Docker-Compose 文件使用的是 Version 2 file
+services:
+  zookeeper: # 指定服务名
+    image: 192.168.48.128:5000/service/zookeeper
+    container_name: zookeeper
+    hostname: zookeeper
+    ports: # 指定端口映射
+      - "2181:2181"
+    expose:
+      - 2181
+    networks:
+      - community
+
+  kafka: # 指定服务名
+    image: 192.168.48.128:5000/service/kafka:2.12-2.0.1
+    container_name: kafka
+    hostname: kafka
+    ports: # 指定端口映射
+      - "9092:9092"
+    expose:
+      - 9092
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    networks:
+      - community
+
+  mysql:
+    image: 192.168.48.128:5000/service/mysql:8.0.20
+    container_name: mysql
+    hostname: mysql
+    #端口号
+    ports:
+      - "3306:3306"
+    expose:
+      - 3306
+    #环境变量
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Shanghai
+    #挂载文件
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d/
+      - ./mysql/conf:/etc/mysql
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/log:/var/log/mysql
+    command: [
+        '--character-set-server=utf8mb4',
+        '--collation-server=utf8mb4_unicode_ci',
+        '--lower_case_table_names=1',
+        '--max_allowed_packet=900M',
+        '--default-authentication-plugin=mysql_native_password' #这行代码解决无法访问的问题
+    ]
+    networks:
+      - community
+
+  redis: # 指定服务名
+    image: 192.168.48.128:5000/service/redis
+    container_name: redis
+    hostname: redis
+    ports: # 指定端口映射
+      - "6379:6379"
+    expose:
+      - 6379
+    networks:
+      - community
+
+  eureka: # 指定服务名
+    image: eureka:Chinese
+    container_name: eureka
+    hostname: eureka
+    ports: # 指定端口映射
+      - "8761:8761"
+    expose:
+      - 8761
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+
+  community_order: # 指定服务名
+    image: service-order:Chinese
+    ports: # 指定端口映射
+      - "8001:8001"
+    expose:
+      - 8001
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_user: # 指定服务名
+    image: service-user:Chinese
+    ports: # 指定端口映射
+      - "8002:8002"
+    expose:
+      - 8002
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_store: # 指定服务名
+    image: service-store:Chinese
+    ports: # 指定端口映射
+      - "8006:8006"
+    expose:
+      - 8006
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+
+  community_api: # 指定服务名
+    image: service-api:Chinese
+    ports: # 指定端口映射
+      - "8008:8008"
+    expose:
+      - 8008
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_community: # 指定服务名
+    image: service-community:Chinese
+    ports: # 指定端口映射
+      - "8009:8009"
+    expose:
+      - 8009
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_fee:  # 指定服务名
+    image: service-fee:Chinese
+    ports: # 指定端口映射
+      - "8010:8010"
+    expose:
+      - 8010
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_oa: # 指定服务名
+    image: service-oa:Chinese
+    ports: # 指定端口映射
+      - "8011:8011"
+    expose:
+      - 8011
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_dev: # 指定服务名
+    image: service-dev:Chinese
+    ports: # 指定端口映射
+      - "8012:8012"
+    expose:
+      - 8012
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_job: # 指定服务名
+    image: service-job:Chinese
+    ports: # 指定端口映射
+      - "8013:8013"
+    expose:
+      - 8013
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_gov_api: # 指定服务名
+    image: service-info-api:Chinese
+    ports: # 指定端口映射
+      - "8101:8101"
+    expose:
+      - 8101
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_gov_assets: # 指定服务名
+    image: service-info-assets:Chinese
+    ports: # 指定端口映射
+      - "8102:8102"
+    expose:
+      - 8102
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_gov_cust: # 指定服务名
+    image: service-info-cust:Chinese
+    ports: # 指定端口映射
+      - "8103:8103"
+    expose:
+      - 8103
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+
+  community_gov_databus: # 指定服务名
+    image: service-info-databus:Chinese
+    ports: # 指定端口映射
+      - "8104:8104"
+    expose:
+      - 8104
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_gov_engine: # 指定服务名
+    image: service-info-engine:Chinese
+    ports: # 指定端口映射
+      - "8105:8105"
+    expose:
+      - 8105
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_gov_gov: # 指定服务名
+    image: service-info-gov:Chinese
+    ports: # 指定端口映射
+      - "8106:8106"
+    expose:
+      - 8106
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+  community_gov_store: # 指定服务名
+    image: service-info-store:Chinese
+    ports: # 指定端口映射
+      - "8108:8108"
+    expose:
+      - 8108
+    networks:
+      - community
+    environment:
+      - MAX_MEM:-Xmx256m
+      - MIN_MEM:-Xms256m
+    links:
+      - "mysql:mysql"
+      - "kafka:kafka"
+      - "redis:redis"
+      - "zookeeper:zookeeper"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - zookeeper
+
+networks:
+  community:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.50.0/24
+          gateway: 192.168.50.1
